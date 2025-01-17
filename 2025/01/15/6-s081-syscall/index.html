@@ -31,7 +31,7 @@
 <meta property="og:image" content="http://example.com/2025/01/15/6-s081-syscall/stvec1.png">
 <meta property="og:image" content="http://example.com/2025/01/15/6-s081-syscall/trampoline.S.png">
 <meta property="article:published_time" content="2025-01-15T01:58:36.000Z">
-<meta property="article:modified_time" content="2025-01-17T19:46:42.654Z">
+<meta property="article:modified_time" content="2025-01-17T19:47:53.979Z">
 <meta property="article:author" content="Zzxy">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/2025/01/15/6-s081-syscall/stvec.png">
@@ -81,7 +81,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">Home</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">Blog</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">Posted on: <time datetime="2025-01-15T01:58:36.000Z">2025-01-15</time></span><span class="sep updated"></span><span class="text updated">Updated on: <time datetime="2025-01-17T19:46:42.654Z">2025-01-18</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">Posted on: <time datetime="2025-01-15T01:58:36.000Z">2025-01-15</time></span><span class="sep updated"></span><span class="text updated">Updated on: <time datetime="2025-01-17T19:47:53.979Z">2025-01-18</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -141,7 +141,7 @@
 <h2 id="3-5-sys-sleep"><a href="#3-5-sys-sleep" class="headerlink" title="3.5 sys_sleep"></a>3.5 sys_sleep</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">uint64</span><br><span class="line"><span class="title function_">sys_sleep</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">int</span> n;</span><br><span class="line">  uint ticks0;</span><br><span class="line">  <span class="comment">// 封装的函数，内部直接获取trapframe内保存的用户寄存器</span></span><br><span class="line">  argint(<span class="number">0</span>, &amp;n);</span><br><span class="line">  <span class="keyword">if</span>(n &lt; <span class="number">0</span>)</span><br><span class="line">    n = <span class="number">0</span>;</span><br><span class="line">  acquire(&amp;tickslock);</span><br><span class="line">  ticks0 = ticks;</span><br><span class="line">  <span class="keyword">while</span>(ticks - ticks0 &lt; n)&#123;</span><br><span class="line">    <span class="keyword">if</span>(killed(myproc()))&#123;</span><br><span class="line">      release(&amp;tickslock);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    sleep(&amp;ticks, &amp;tickslock);</span><br><span class="line">  &#125;</span><br><span class="line">  release(&amp;tickslock);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>再进最后一步，内核来到sleep系统调用的处理函数。sleep系统调用是有参数的，这个参数由trapframe中保存的用户寄存器来，获得所有参数后，再调用各种内核函数实现用户要求的功能即可。</p>
 <h1 id="4-lab-syscall"><a href="#4-lab-syscall" class="headerlink" title="4. lab syscall"></a>4. lab syscall</h1><p>先放链接<a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.828/2022/labs/syscall.html">https://pdos.csail.mit.edu/6.828/2022/labs/syscall.html</a><br>弄清楚系统调用的全过程，几个lab就非常简单了。</p>
-<h2 id="4-1-gdb"><a href="#4-1-gdb" class="headerlink" title="4.1 gdb"></a>4.1 gdb</h2><p>使用gdb打印几个值回答问题即可，注意gdb调试内核的方法，可以通过file在用户程序和内核程序间跳转。</p>
+<h2 id="4-1-gdb"><a href="#4-1-gdb" class="headerlink" title="4.1 gdb"></a>4.1 gdb</h2><p>使用gdb打印几个值回答问题即可，注意gdb调试内核的方法，可以通过file在用户程序和内核程序间跳转。<br><a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.828/2022/labs/gdb.html">https://pdos.csail.mit.edu/6.828/2022/labs/gdb.html</a></p>
 <h2 id="4-2-syscall-trace"><a href="#4-2-syscall-trace" class="headerlink" title="4.2 syscall trace"></a>4.2 syscall trace</h2><p>实现一个功能，每次执行系统调用时，在stdout上打印出系统调用名和返回值，在上一章所示的syscall函数中加个printf即可，不贴代码了。</p>
 <h2 id="4-3-sysinfo"><a href="#4-3-sysinfo" class="headerlink" title="4.3 sysinfo"></a>4.3 sysinfo</h2><p>实现一个新的系统调用，功能是打印内核进程状态，这里梳理一下怎么在xv6内添加系统调用。</p>
 <ul>
